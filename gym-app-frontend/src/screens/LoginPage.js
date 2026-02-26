@@ -5,13 +5,18 @@ import {
   View,
   Image,
   Alert,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  Loading,
-  CustomTextInput,
-  CustomButton,
-} from "../components";
+import { LinearGradient } from "expo-linear-gradient"; // YENİ
+import { Ionicons } from "@expo/vector-icons"; // YENİ
+import { BlurView } from "expo-blur"; // YENİ
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   setEmail,
@@ -43,10 +48,10 @@ const LoginPage = ({ navigation }) => {
       const result = await api.login({ email, password });
       console.log("📥 Backend cevabı:", result);
 
-      // 🔥 Doğru: Kullanıcıyı login yap
+      // 🔥 Kullanıcıyı login yap
       dispatch(setUser(result.data.user));
       dispatch(setToken(result.data.token));
-      dispatch(setAuth(true)); // 🔥 BURASI ÇOK ÖNEMLİ
+      dispatch(setAuth(true));
 
       Alert.alert("Başarılı", `Hoş geldiniz, ${result.data.user.firstName}!`);
     } catch (error) {
@@ -59,57 +64,107 @@ const LoginPage = ({ navigation }) => {
 
   return (
     <Layout>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <View style={styles.outerContainer}>
-          <Image
-            style={styles.logo}
-            source={require("../../assets/images/logo.png")}
-          />
-
-          <View style={styles.loginBox}>
-            <Text style={styles.welcome}>WELCOME TO GYM APP</Text>
-
-            <CustomTextInput
-              title="E-mail"
-              isSecureText={false}
-              handleonChangeText={(text) => dispatch(setEmail(text))}
-              handleValue={email}
-              handlePlaceholder="Enter your e-mail"
-            />
-
-            <CustomTextInput
-              title="Password"
-              isSecureText={true}
-              handleonChangeText={(text) => dispatch(setPassword(text))}
-              handleValue={password}
-              handlePlaceholder="Enter your password"
-            />
-
-            <View style={styles.buttonContainer}>
-              <CustomButton
-                buttonText="SIGN IN"
-                setWidth="100%"
-                handleOnPress={handleLogin}
-                buttonColor="#D6B982"
-                pressedButtonColor="#C0A673"
-              />
-
-              <CustomButton
-                buttonText="SIGN UP"
-                setWidth="100%"
-                handleOnPress={() => navigation.navigate("Signup")}
-                buttonColor="transparent"
-                pressedButtonColor="rgba(214,185,130,0.2)"
-                textColor="#D6B982"
-                borderColor="#D6B982"
-              />
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            
+            {/* 🖼️ LOGO ALANI */}
+            <View style={styles.logoContainer}>
+                <View style={styles.logoWrapper}>
+                    <Image
+                        style={styles.logo}
+                        source={require("../../assets/images/logo.png")}
+                    />
+                </View>
+                <Text style={styles.brandTitle}>GYM APP</Text>
+                <Text style={styles.brandSubtitle}>Premium Fitness Deneyimi</Text>
             </View>
-          </View>
 
-          {isLoading && (
-            <Loading changeIsLoading={() => dispatch(setIsLoading(false))} />
-          )}
-        </View>
+            {/* 🔐 LOGIN KARTI (Blur Effect) */}
+            <View style={styles.cardContainer}>
+                <BlurView intensity={30} tint="dark" style={styles.blurCard}>
+                    <Text style={styles.welcomeText}>Hoş Geldiniz</Text>
+                    <Text style={styles.instructionText}>Devam etmek için giriş yapın</Text>
+
+                    {/* E-MAIL INPUT */}
+                    <View style={styles.inputWrapper}>
+                        <Text style={styles.inputLabel}>E-MAIL</Text>
+                        <LinearGradient
+                            colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
+                            style={styles.inputGradient}
+                        >
+                            <Ionicons name="mail-outline" size={20} color="#D6B982" style={{marginRight: 10}}/>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="ornek@email.com"
+                                placeholderTextColor="#666"
+                                onChangeText={(text) => dispatch(setEmail(text))}
+                                value={email}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        </LinearGradient>
+                    </View>
+
+                    {/* PASSWORD INPUT */}
+                    <View style={styles.inputWrapper}>
+                        <Text style={styles.inputLabel}>ŞİFRE</Text>
+                        <LinearGradient
+                            colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.02)"]}
+                            style={styles.inputGradient}
+                        >
+                            <Ionicons name="lock-closed-outline" size={20} color="#D6B982" style={{marginRight: 10}}/>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="••••••••"
+                                placeholderTextColor="#666"
+                                onChangeText={(text) => dispatch(setPassword(text))}
+                                value={password}
+                                secureTextEntry={true}
+                            />
+                        </LinearGradient>
+                    </View>
+
+                    {/* SIGN IN BUTTON */}
+                    <Pressable
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                        style={({ pressed }) => [
+                            styles.loginButton,
+                            pressed && { opacity: 0.9 },
+                            isLoading && { opacity: 0.7 }
+                        ]}
+                    >
+                        <LinearGradient
+                            colors={["#D6B982", "#b39666"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.buttonGradient}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator color="#000" />
+                            ) : (
+                                <Text style={styles.loginButtonText}>GİRİŞ YAP</Text>
+                            )}
+                        </LinearGradient>
+                    </Pressable>
+
+                    {/* SIGN UP LINK */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>Hesabın yok mu?</Text>
+                        <Pressable onPress={() => navigation.navigate("Signup")}>
+                            <Text style={styles.signupText}>Kayıt Ol</Text>
+                        </Pressable>
+                    </View>
+
+                </BlurView>
+            </View>
+
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Layout>
   );
@@ -117,48 +172,141 @@ const LoginPage = ({ navigation }) => {
 
 export default LoginPage;
 
+// 🎨 PREMİUM LUXURY STYLES
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "transparent",
   },
-  outerContainer: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingBottom: 40,
+  },
+  
+  // LOGO SECTION
+  logoContainer: {
+      alignItems: 'center',
+      marginBottom: 30,
+  },
+  logoWrapper: {
+      shadowColor: "#D6B982",
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 20,
+      marginBottom: 10
   },
   logo: {
-    width: 140,
-    height: 140,
-    marginBottom: 35,
-    resizeMode: "contain",
+    width: 200,
+    height: 200,
+    resizeMode: "cover",
   },
-  loginBox: {
-    width: "85%",
-    backgroundColor: "rgba(15, 15, 15, 0.7)",
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(214,185,130,0.15)",
-    shadowColor: "#D6B982",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 12,
+  brandTitle: {
+      color: "#D6B982",
+      fontSize: 28,
+      fontWeight: "900",
+      letterSpacing: 2,
   },
-  welcome: {
-    color: "#D6B982",
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 30,
-    letterSpacing: 1,
-    textAlign: "center",
+  brandSubtitle: {
+      color: "#888",
+      fontSize: 12,
+      letterSpacing: 1,
+      textTransform: "uppercase"
   },
-  buttonContainer: {
-    width: "100%",
-    marginTop: 25,
-    gap: 12,
+
+  // CARD SECTION
+  cardContainer: {
+      width: "90%",
+      borderRadius: 24,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: "rgba(214, 185, 130, 0.2)",
   },
+  blurCard: {
+      padding: 25,
+      backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  welcomeText: {
+      color: "#fff",
+      fontSize: 24,
+      fontWeight: "700",
+      textAlign: "center",
+      marginBottom: 5
+  },
+  instructionText: {
+      color: "#666",
+      fontSize: 14,
+      textAlign: "center",
+      marginBottom: 30
+  },
+
+  // INPUTS
+  inputWrapper: {
+      marginBottom: 20
+  },
+  inputLabel: {
+      color: "#D6B982",
+      fontSize: 11,
+      fontWeight: "700",
+      marginBottom: 8,
+      marginLeft: 4,
+      letterSpacing: 0.5
+  },
+  inputGradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 12,
+      paddingHorizontal: 15,
+      height: 55,
+      borderWidth: 1,
+      borderColor: "#333"
+  },
+  input: {
+      flex: 1,
+      color: "#fff",
+      fontSize: 16,
+      height: '100%'
+  },
+
+  // BUTTONS
+  loginButton: {
+      marginTop: 10,
+      borderRadius: 14,
+      shadowColor: "#D6B982",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 5
+  },
+  buttonGradient: {
+      height: 55,
+      borderRadius: 14,
+      justifyContent: 'center',
+      alignItems: 'center'
+  },
+  loginButtonText: {
+      color: "#000",
+      fontSize: 16,
+      fontWeight: "800",
+      letterSpacing: 1
+  },
+
+  // FOOTER
+  footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 25,
+      alignItems: 'center'
+  },
+  footerText: {
+      color: "#888",
+      fontSize: 14,
+      marginRight: 5
+  },
+  signupText: {
+      color: "#D6B982",
+      fontSize: 14,
+      fontWeight: "700",
+      textDecorationLine: 'underline'
+  }
 });
