@@ -1,0 +1,21 @@
+// Expo config - icon/splash path'leri kaldırıldı (assets yoksa crash önlenir)
+module.exports = {
+  expo: {
+    name: "Proje2",
+    slug: "Proje2",
+    version: "1.0.0",
+    orientation: "portrait",
+    userInterfaceStyle: "light",
+    newArchEnabled: true,
+    splash: {
+      resizeMode: "contain",
+      backgroundColor: "#ffffff",
+    },
+    ios: { supportsTablet: true },
+    android: {
+      adaptiveIcon: { backgroundColor: "#ffffff" },
+      edgeToEdgeEnabled: true,
+    },
+    plugins: ["expo-router"],
+  },
+};
